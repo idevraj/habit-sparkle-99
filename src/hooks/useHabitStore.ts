@@ -17,11 +17,22 @@ export interface Store {
   active: string | null;
 }
 
-const DAYS = 30;
 const KEY = 'habit_rebuild_v221';
 
 const getMonthKey = (date: Date) => `${date.getFullYear()}-${date.getMonth() + 1}`;
 const getMonthLabel = (date: Date) => date.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+// Get the number of days in a month from a key like "2024-1"
+const getDaysInMonth = (key: string): number => {
+  const [year, month] = key.split('-').map(Number);
+  return new Date(year, month, 0).getDate();
+};
+
+// Get days in current month
+const getCurrentMonthDays = (): number => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+};
 
 const getInitialStore = (): Store => {
   const stored = localStorage.getItem(KEY);
@@ -50,11 +61,12 @@ export const useHabitStore = () => {
         const prevCycles = Object.values(newStore.cycles);
         const lastCycle = prevCycles[prevCycles.length - 1];
         
+        const daysInMonth = getCurrentMonthDays();
         newStore.cycles[key] = {
           label: getMonthLabel(now),
           archived: false,
           habits: lastCycle 
-            ? lastCycle.habits.map(h => ({ name: h.name, color: h.color, days: Array(DAYS).fill(false) }))
+            ? lastCycle.habits.map(h => ({ name: h.name, color: h.color, days: Array(daysInMonth).fill(false) }))
             : []
         };
       }
@@ -77,16 +89,20 @@ export const useHabitStore = () => {
 
   const activeCycle = store.active ? store.cycles[store.active] : null;
 
+  // Calculate days for active month
+  const activeDays = store.active ? getDaysInMonth(store.active) : getCurrentMonthDays();
+
   const addHabit = useCallback((name: string, color: string) => {
     if (!store.active) return;
     
+    const daysInMonth = getDaysInMonth(store.active);
     setStore(prev => ({
       ...prev,
       cycles: {
         ...prev.cycles,
         [prev.active!]: {
           ...prev.cycles[prev.active!],
-          habits: [...prev.cycles[prev.active!].habits, { name, color, days: Array(DAYS).fill(false) }]
+          habits: [...prev.cycles[prev.active!].habits, { name, color, days: Array(daysInMonth).fill(false) }]
         }
       }
     }));
@@ -185,7 +201,7 @@ export const useHabitStore = () => {
     reorderHabits,
     setActiveMonth,
     getStreak,
-    DAYS
+    DAYS: activeDays
   };
 };
 

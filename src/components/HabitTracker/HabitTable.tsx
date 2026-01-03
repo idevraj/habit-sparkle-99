@@ -41,7 +41,7 @@ export const HabitTable = ({ cycle, days, onToggleDay, onDelete, onReorder, getS
               Habit
             </th>
             {Array.from({ length: days }, (_, i) => (
-              <th key={i} className="p-2 text-center font-medium text-muted-foreground min-w-[32px]">
+              <th key={i} className="p-1 text-center font-medium text-muted-foreground min-w-[28px]">
                 {i + 1}
               </th>
             ))}
@@ -86,14 +86,35 @@ export const HabitTable = ({ cycle, days, onToggleDay, onDelete, onReorder, getS
                   const isToday = editable && checkDate.getTime() === today.getTime();
                   
                   return (
-                    <td key={dayIndex} className="p-1 text-center">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        disabled={!isToday}
-                        onChange={() => onToggleDay(habitIndex, dayIndex)}
-                        className="w-4 h-4 accent-primary cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                      />
+                    <td key={dayIndex} className="p-0.5 text-center">
+                      <label 
+                        className={`flex items-center justify-center w-6 h-6 rounded-md cursor-pointer transition-all
+                          ${checked ? 'bg-primary/20' : 'bg-muted/20 hover:bg-muted/40'}
+                          ${!isToday ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}
+                        `}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={!isToday}
+                          onChange={() => onToggleDay(habitIndex, dayIndex)}
+                          className="sr-only"
+                        />
+                        <span 
+                          className={`w-3.5 h-3.5 rounded-sm border-2 transition-all flex items-center justify-center
+                            ${checked 
+                              ? 'border-primary bg-primary text-primary-foreground' 
+                              : 'border-muted-foreground/40'
+                            }
+                          `}
+                        >
+                          {checked && (
+                            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </span>
+                      </label>
                     </td>
                   );
                 })}

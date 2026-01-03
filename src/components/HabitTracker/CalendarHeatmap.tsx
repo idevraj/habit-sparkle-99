@@ -7,7 +7,8 @@ interface CalendarHeatmapProps {
 }
 
 export const CalendarHeatmap = ({ cycle, days }: CalendarHeatmapProps) => {
-  const heatmapData = useMemo(() => {
+  // Overall heatmap data
+  const overallData = useMemo(() => {
     if (!cycle || cycle.habits.length === 0) {
       return Array(days).fill(0);
     }
@@ -26,72 +27,103 @@ export const CalendarHeatmap = ({ cycle, days }: CalendarHeatmapProps) => {
     return 'bg-primary shadow-glow';
   };
 
-  const getWeeks = () => {
-    const weeks: number[][] = [];
-    for (let i = 0; i < days; i += 7) {
-      weeks.push(heatmapData.slice(i, i + 7));
-    }
-    return weeks;
+  const getHabitIntensityStyle = (completed: boolean, color: string) => {
+    if (!completed) return { backgroundColor: 'hsl(var(--muted) / 0.3)' };
+    return { 
+      backgroundColor: color,
+      boxShadow: `0 0 6px ${color}`
+    };
   };
 
   if (!cycle) return null;
 
-  const weeks = getWeeks();
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
   return (
-    <div className="glass p-4 rounded-2xl animate-fade-in">
-      <h3 className="text-sm font-semibold mb-4 dark:text-shadow-neon">
-        📅 Completion Heatmap
-      </h3>
-      
-      <div className="flex gap-2">
-        {/* Week day labels */}
-        <div className="flex flex-col gap-1 text-[10px] text-muted-foreground">
-          {weekDays.map(day => (
-            <div key={day} className="h-5 flex items-center justify-end pr-1">
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Heatmap grid */}
-        <div className="flex gap-1 overflow-x-auto">
-          {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="flex flex-col gap-1">
-              <div className="text-[9px] text-muted-foreground text-center mb-0.5">
-                W{weekIndex + 1}
+    <div className="glass p-4 rounded-2xl animate-fade-in space-y-6">
+      {/* Overall Heatmap */}
+      <div>
+        <h3 className="text-sm font-semibold mb-3 dark:text-shadow-neon">
+          📅 Overall Completion Heatmap
+        </h3>
+        
+        <div className="flex flex-wrap gap-1">
+          {overallData.map((value, dayIndex) => {
+            const completed = cycle.habits.filter(h => h.days[dayIndex]).length;
+            const total = cycle.habits.length;
+            
+            return (
+              <div
+                key={dayIndex}
+                className={`w-6 h-6 rounded-sm transition-all hover:scale-125 cursor-pointer flex items-center justify-center text-[8px] font-medium ${getIntensityClass(value)}`}
+                title={`Day ${dayIndex + 1}: ${completed}/${total} habits completed`}
+              >
+                {dayIndex + 1}
               </div>
-              {week.map((value, dayIndex) => {
-                const globalDayIndex = weekIndex * 7 + dayIndex;
-                const completed = cycle.habits.filter(h => h.days[globalDayIndex]).length;
-                const total = cycle.habits.length;
-                
-                return (
-                  <div
-                    key={dayIndex}
-                    className={`w-5 h-5 rounded-sm transition-all hover:scale-110 cursor-pointer ${getIntensityClass(value)}`}
-                    title={`Day ${globalDayIndex + 1}: ${completed}/${total} habits completed`}
-                  />
-                );
-              })}
-            </div>
-          ))}
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center gap-2 mt-3 text-[10px] text-muted-foreground">
+          <span>Less</span>
+          <div className="flex gap-0.5">
+            <div className="w-3 h-3 rounded-sm bg-muted/30" />
+            <div className="w-3 h-3 rounded-sm bg-primary/25" />
+            <div className="w-3 h-3 rounded-sm bg-primary/50" />
+            <div className="w-3 h-3 rounded-sm bg-primary/75" />
+            <div className="w-3 h-3 rounded-sm bg-primary shadow-glow" />
+          </div>
+          <span>More</span>
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-2 mt-4 text-[10px] text-muted-foreground">
-        <span>Less</span>
-        <div className="flex gap-0.5">
-          <div className="w-3 h-3 rounded-sm bg-muted/30" />
-          <div className="w-3 h-3 rounded-sm bg-primary/25" />
-          <div className="w-3 h-3 rounded-sm bg-primary/50" />
-          <div className="w-3 h-3 rounded-sm bg-primary/75" />
-          <div className="w-3 h-3 rounded-sm bg-primary shadow-glow" />
+      {/* Per-Habit Heatmaps */}
+      {cycle.habits.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-3 dark:text-shadow-neon">
+            🎯 Per-Habit Heatmaps
+          </h3>
+          
+          <div className="space-y-3">
+            {cycle.habits.map((habit, habitIndex) => {
+              const completedDays = habit.days.filter(Boolean).length;
+              const pct = Math.round((completedDays / days) * 100);
+              
+              return (
+                <div key={habitIndex} className="p-3 rounded-xl bg-card/50 border border-border/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span 
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ 
+                          backgroundColor: habit.color,
+                          boxShadow: `0 0 8px ${habit.color}`
+                        }}
+                      />
+                      <span className="text-xs font-medium">{habit.name}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {completedDays}/{days} ({pct}%)
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-0.5">
+                    {habit.days.map((completed, dayIndex) => (
+                      <div
+                        key={dayIndex}
+                        className="w-4 h-4 rounded-[3px] transition-all hover:scale-150 cursor-pointer flex items-center justify-center text-[6px]"
+                        style={getHabitIntensityStyle(completed, habit.color)}
+                        title={`Day ${dayIndex + 1}: ${completed ? '✓ Completed' : '✗ Not completed'}`}
+                      >
+                        {dayIndex + 1}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <span>More</span>
-      </div>
+      )}
     </div>
   );
 };

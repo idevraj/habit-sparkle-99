@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Clock } from '@/components/HabitTracker/Clock';
-import { Header } from '@/components/HabitTracker/Header';
-import { Tabs } from '@/components/HabitTracker/Tabs';
-import { Summary } from '@/components/HabitTracker/Summary';
-import { PerHabitSummary } from '@/components/HabitTracker/PerHabitSummary';
-import { HabitTable } from '@/components/HabitTracker/HabitTable';
-import { AddHabitModal } from '@/components/HabitTracker/AddHabitModal';
-import { DeleteModal } from '@/components/HabitTracker/DeleteModal';
-import { MonthModal } from '@/components/HabitTracker/MonthModal';
+import {
+  Clock,
+  Header,
+  Tabs,
+  Summary,
+  PerHabitSummary,
+  HabitTable,
+  CalendarHeatmap,
+  AddHabitModal,
+  DeleteModal,
+  MonthModal,
+} from '@/components/HabitTracker';
 import { useHabitStore } from '@/hooks/useHabitStore';
 
 const THEME_KEY = 'habit_theme';
@@ -73,6 +76,8 @@ const Index = () => {
         <Summary cycle={activeCycle} activeTab={activeTab} days={DAYS} />
         
         <PerHabitSummary cycle={activeCycle} activeTab={activeTab} days={DAYS} />
+        
+        <CalendarHeatmap cycle={activeCycle} days={DAYS} />
         
         <HabitTable
           cycle={activeCycle}
